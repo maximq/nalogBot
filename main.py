@@ -1,4 +1,5 @@
 import json
+import os
 
 from vkwave.bots import EventTypeFilter, SimpleLongPollBot
 from vkwave.bots.core.dispatching import filters
@@ -8,8 +9,8 @@ from vkwave.types.bot_events import BotEventType
 
 from doc_list import docs
 
-token = '91da994816a4284e70457c25158f5f3e935e5e657631f310f75c4d5d9e39cdffd007f738cbadb53662cd4'
-group_id = 142414008
+token = os.environ['VK_TOKEN']
+group_id = int(os.environ['GROUP_ID'])
 bot = SimpleLongPollBot(token, group_id=group_id)
 
 
