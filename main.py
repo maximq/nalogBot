@@ -40,7 +40,7 @@ async def exit_handler(event: bot.SimpleBotEvent):
 
 
 # starting interview (has default filter that will reject messages if state exists)
-@bot.message_handler(bot.text_filter("начать"))
+@bot.message_handler(filters.PayloadFilter({"button": "start"}))
 async def start_handler(event: bot.SimpleBotEvent):
     await fsm.set_state(event=event, state=MyState.tax, for_what=ForWhat.FOR_USER)
     kb = Keyboard(one_time=True)
@@ -71,14 +71,18 @@ async def name_handler(event: bot.SimpleBotEvent):
     with open(docs.get(payload.get('button')), 'r') as file:
         description_docs = file.read()
     # extra_state_data is totally equal to fsm.add_data(..., state_data={"name": event.object.object.message.text})
+
+    kb = Keyboard(one_time=True)
+    kb.add_text_button("Отмена", payload={"button": "exit"})
     await event.answer(description_docs)
-    return 'Оставьте номер телефона для связи'
+    await event.answer('Оставьте номер телефона для связи', keyboard=kb.get_keyboard())
+    return
 
 
 @bot.message_handler(StateFilter(fsm=fsm, state=MyState.number, for_what=ForWhat.FOR_USER),)
 async def age_handler(event: bot.SimpleBotEvent):
     if not event.object.object.message.text.isdigit():
-        return f"Необходимы цифры!"
+        return f"Необходим номер телефона в формате 79XXXXXXXXX"
     await fsm.add_data(
         event=event,
         for_what=ForWhat.FOR_USER,
@@ -89,13 +93,13 @@ async def age_handler(event: bot.SimpleBotEvent):
     # we finish interview and... we should delete user's state from storage.
     # `fsm.finish` will do it by itself.
     await fsm.finish(event=event, for_what=ForWhat.FOR_USER)
-    await event.answer(f"Your data - {user_data['tax']} - {user_data['number']}")
+    await event.answer(f"Введенны следующие данные: - {user_data['tax']} - {user_data['number']}")
     return await exit_handler(event)
 
 
 @bot.message_handler()
 async def echo_handler(event: bot.SimpleBotEvent):
-    return await exit_handler(event)  # ...и отвечать на них текстом нового сообщения
+    return await exit_handler(event)  # Возврат в начало
 
 
 bot.run_forever()
